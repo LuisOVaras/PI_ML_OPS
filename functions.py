@@ -38,29 +38,29 @@ def userdata(user_id: str):
         'Cantidad de Ítems': cantidad_items
     }
 
+# ...
+
+# Optimiza la función UserForGenre
 def UserForGenre(genero: str):
-    # Filtrar df_steam_games para obtener solo las filas que contienen el género especificado
+    # Filtra df_steam_games para obtener solo las filas que contienen el género especificado
     filtered_games = df_steam_games[df_steam_games['genres'].str.contains(genero, case=False, na=False)]
-    
-    # Filtrar df_items para reducir el conjunto de datos a las columnas necesarias
-    df_items_filtered = df_items[['user_id', 'item_id', 'playtime_forever']]
-    
-    # Combinar los DataFrames filtrados en uno solo usando "item_id" como clave
-    combined_df = pd.merge(df_items_filtered, filtered_games, left_on='item_id', right_on='id', how='inner')
 
-    # Asegura que 'playtime_forever' sea tratada como tipo numérico (para evitar errores de suma)
-    combined_df['playtime_forever'] = pd.to_numeric(combined_df['playtime_forever'], errors='coerce')
+    # Filtra df_items para reducir el conjunto de datos a las columnas necesarias
+    df_items_filtered = df_items[df_items['item_id'].isin(filtered_games['id'])]
 
-    # Agrupa por usuario y año, suma las horas jugadas y encuentra el usuario con más horas jugadas
-    result_df = combined_df.groupby(['user_id', 'release_date'])['playtime_forever'].sum().reset_index()
+    # Realiza una unión (join) para incluir la información de 'release_date' desde df_steam_games
+    df_items_filtered = df_items_filtered.merge(filtered_games[['id', 'release_date']], left_on='item_id', right_on='id', how='inner')
+
+    # Verifica si 'release_date' está en el DataFrame df_items_filtered
+    if 'release_date' not in df_items_filtered.columns:
+        return {"Error": "La columna 'release_date' no está presente en el DataFrame."}
+
+    # Continúa con la operación de agrupación
+    result_df = df_items_filtered.groupby(['user_id', 'release_date'])['playtime_forever'].sum().reset_index()
     max_user = result_df.loc[result_df['playtime_forever'].idxmax()]
 
-    # Asegura que 'playtime_forever' sea tratada como tipo numérico (para evitar errores en el cálculo de acumulación)
-    result_df['playtime_forever'] = pd.to_numeric(result_df['playtime_forever'], errors='coerce')
-
     # Convierte las horas jugadas de minutos a horas
-    result_df['playtime_forever'] = result_df['playtime_forever'] / 60
-    result_df['playtime_forever'] = result_df['playtime_forever'].round(0)
+    result_df['playtime_forever'] = (result_df['playtime_forever'] / 60).round(0)
 
     # Crea una lista de acumulación de horas jugadas por año
     accumulation = result_df.groupby('release_date')['playtime_forever'].sum().reset_index()
