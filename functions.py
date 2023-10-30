@@ -38,7 +38,6 @@ def userdata(user_id: str):
         'Cantidad de Ítems': cantidad_items
     }
 
-# ...
 
 # Optimiza la función UserForGenre
 def UserForGenre(genero: str):
