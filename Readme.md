@@ -50,4 +50,4 @@ Para utilizar la API, puedes realizar consultas directamente en el sitio donde s
 
 ## Video de Demostración
 
-Para ver una demostración de la funcionalidad de la API y el sistema de recomendación en acción, puede ver el video de demostración [aquí](link-al-video).
+Para ver una demostración de la funcionalidad de la API y el sistema de recomendación en acción, puede ver el video de demostración [aquí](https://drive.google.com/drive/folders/1ZbpLziJw5X6BUVo9fa5_oQ1ETBWfJSIj?usp=sharing).
