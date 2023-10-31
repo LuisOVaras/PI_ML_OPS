@@ -4,7 +4,7 @@ import pandas as pd  # Asegúrate de importar las bibliotecas necesarias
 
 # Cargar los datos CSV
 df_reviews = pd.read_csv("data/output/reviews.csv")
-df_items = pd.read_parquet("data/output/items.parquet")
+df_items = pd.read_csv("data/output/items.csv")
 df_steam_games = pd.read_csv("data/output/steam_games.csv")
 
 
