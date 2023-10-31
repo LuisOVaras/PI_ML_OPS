@@ -27,7 +27,7 @@ async def get_recomendacion_juego(id_producto: int):
 
 @app.get('/developer_data/{desarrolladora}')
 def developer(desarrolladora: str):
-    resultado = analyze_developer_data( desarrolladora)
+    resultado = analyze_developer_data(desarrolladora)
     return resultado
 
 
@@ -45,10 +45,10 @@ async def get_user_genre(genero: str):
 
 @app.get('/developer_reviews/{desarrolladora}')
 def developer(desarrolladora: str):
-    resultado = analyze_developer_reviews( desarrolladora)
+    resultado = analyze_developer_reviews(desarrolladora)
     return resultado
 
-@app.get("/best_developer/{año}")
+@app.get("/best_developer/{anio}")
 def get_best_developers(year: int):
     resultado = best_developer_year(year)
     return {"Top 3 desarrolladores para el año {}: ".format(year): resultado}
