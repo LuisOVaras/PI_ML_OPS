@@ -49,19 +49,25 @@ def UserForGenre(genero: str):
     # Filtra df_items para reducir el conjunto de datos a las columnas necesarias
     df_items_filtered = df_items[df_items['item_id'].isin(filtered_games['id'])]
 
-    # Realiza una unión (join) para incluir la información de 'release_date' desde df_steam_games
+    # Realiza una unión (join) entre df_items_filtered y df_steam_games usando 'id' como clave
     df_items_filtered = df_items_filtered.merge(filtered_games[['id', 'release_date']], left_on='item_id', right_on='id', how='inner')
 
-    # Verifica si 'release_date' está en el DataFrame df_items_filtered
+    # Intenta convertir 'release_date' a un tipo de fecha y hora
+    try:
+        df_items_filtered['release_date'] = pd.to_datetime(df_items_filtered['release_date'], errors='coerce')
+    except ValueError:
+        return {"Error": "No se pueden convertir todas las fechas 'release_date' a un tipo de fecha y hora."}
+
+    # Verifica si 'release_date' está presente en el DataFrame df_items_filtered
     if 'release_date' not in df_items_filtered.columns:
         return {"Error": "La columna 'release_date' no está presente en el DataFrame."}
 
-    # Continúa con la operación de agrupación
-    result_df = df_items_filtered.groupby(['user_id', 'release_date'])['playtime_forever'].sum().reset_index()
+    # Convierte las horas jugadas de minutos a horas
+    result_df = df_items_filtered.groupby(['user_id', df_items_filtered['release_date'].dt.year])['playtime_forever'].sum().reset_index()
     max_user = result_df.loc[result_df['playtime_forever'].idxmax()]
 
-    # Convierte las horas jugadas de minutos a horas
-    result_df['playtime_forever'] = (result_df['playtime_forever'] / 60).round(0)
+    # Convierte las horas jugadas de segundos a horas
+    result_df['playtime_forever'] = (result_df['playtime_forever'] / 3600).round(0)
 
     # Crea una lista de acumulación de horas jugadas por año
     accumulation = result_df.groupby('release_date')['playtime_forever'].sum().reset_index()
@@ -69,6 +75,7 @@ def UserForGenre(genero: str):
     accumulation_list = accumulation.to_dict(orient='records')
 
     return {"Usuario con más horas jugadas para el género " + genero: max_user['user_id'], "Horas jugadas": accumulation_list}
+
 
 def analyze_developer_data(desarrolladora: str):
     # Creamos un DataFrame más reducido
@@ -110,5 +117,32 @@ def analyze_developer_reviews(desarrolladora: str):
 
     # Crear el diccionario de resultados
     resultado = {desarrolladora: {'Positive': sentimiento_positivo, 'Negative': sentimiento_negativo}}
+
+    return resultado
+
+def best_developer_year(year: int):
+    # Filtra los juegos del año especificado en df_steam_games
+
+    # Convierte la columna 'release_date' a datetime si aún no lo está
+    df_steam_games['release_date'] = pd.to_datetime(df_steam_games['release_date'], errors='coerce')
+
+    # Filtra los juegos por año
+    juegos_del_año = df_steam_games[pd.to_datetime(df_steam_games['release_date']).dt.year == year]
+
+    # Combinación de DataFrames para obtener los juegos recomendados en ese año
+    combined_df = pd.merge(juegos_del_año, df_reviews, left_on='id', right_on='item_id', how='inner')
+
+    # Filtra los juegos recomendados con comentarios positivos
+    juegos_recomendados = combined_df[(combined_df['recommend'] == True) & (combined_df['sentiment_analysis'] == 2)]
+
+    # Agrupa por desarrollador y cuenta las recomendaciones
+    desarrolladores_recomendados = juegos_recomendados['developer'].value_counts().reset_index()
+    desarrolladores_recomendados.columns = ['developer', 'recommend_count']
+
+    # Ordena en orden descendente y toma los 3 principales
+    top_desarrolladores = desarrolladores_recomendados.nlargest(3, 'recommend_count')
+
+    # Formatea el resultado en un formato de lista de diccionarios
+    resultado = [{"Puesto {}: {}".format(i + 1, row['developer']): row['recommend_count']} for i, row in top_desarrolladores.iterrows()]
 
     return resultado

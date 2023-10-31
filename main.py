@@ -8,7 +8,8 @@ app = FastAPI()
 from recomendacion_juego import recomendacion_juego
 
 # Importar las funciones desde functions.py
-from functions import userdata, UserForGenre, analyze_developer_data, analyze_developer_reviews
+from functions import userdata, UserForGenre, analyze_developer_data, analyze_developer_reviews, best_developer_year
+
 
 # Cargar los datos CSV
 df_reviews = pd.read_csv("data/output/reviews.csv")
@@ -46,6 +47,11 @@ async def get_user_genre(genero: str):
 def developer(desarrolladora: str):
     resultado = analyze_developer_reviews( desarrolladora)
     return resultado
+
+@app.get("/best_developer/{año}")
+def get_best_developers(year: int):
+    resultado = best_developer_year(year)
+    return {"Top 3 desarrolladores para el año {}: ".format(year): resultado}
 
 #Run server
 # uvicorn main:app --reload
